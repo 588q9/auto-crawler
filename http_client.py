@@ -182,6 +182,14 @@ class MoodleClient:
 
         ts = timestamp if timestamp is not None else int(_time.time() * 1000)
         params = {"sesskey": sesskey or "", "timestamp": ts}
+        # Some Moodle setups require 'info' query hint equal to methodname
+        try:
+            if payload_list and isinstance(payload_list[0], dict):
+                mn = payload_list[0].get("methodname")
+                if isinstance(mn, str) and mn:
+                    params["info"] = mn
+        except Exception:
+            pass
 
         headers = {
             "Content-Type": "application/json",
@@ -212,6 +220,14 @@ class MoodleClient:
 
         ts = timestamp if timestamp is not None else int(_time.time() * 1000)
         params = {"sesskey": sesskey or "", "timestamp": ts}
+        # Optional 'info' hint
+        try:
+            if payload_list and isinstance(payload_list[0], dict):
+                mn = payload_list[0].get("methodname")
+                if isinstance(mn, str) and mn:
+                    params["info"] = mn
+        except Exception:
+            pass
 
         headers = {
             "Content-Type": "application/json",
@@ -269,7 +285,19 @@ class MoodleClient:
                     info["sesskey"] = sk
             except Exception:
                 # Fall back to generic patterns below
-                pass
+                try:
+                    # Directly regex inside the raw playerdata object (single-quote tolerant)
+                    m_fsid = re.search(r"['\"]fsresourceid['\"]\s*:\s*(\d+)", raw)
+                    if m_fsid:
+                        info["fsresourceid"] = int(m_fsid.group(1))
+                    m_sk = re.search(r"['\"]sesskey['\"]\s*:\s*['\"]([^'\"]+)['\"]", raw)
+                    if m_sk:
+                        info["sesskey"] = m_sk.group(1)
+                    m_dur = re.search(r"['\"]duration['\"]\s*:\s*(\d+)", raw)
+                    if m_dur:
+                        info["duration"] = int(m_dur.group(1))
+                except Exception:
+                    pass
 
         # Common patterns in inline JS or data attributes
         patterns = [
