@@ -1,0 +1,13 @@
+[
+  {
+    "index": 0,
+    "methodname": "mod_fsresource_set_time",
+    "args": {
+      "fsresourceid": {fsresourceid},
+      "time": {time},
+      "finish": 0,
+      "progress": "0.00",
+      "unique": "{timestamp}_0.0"
+    }
+  }
+]
