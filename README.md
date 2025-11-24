@@ -114,3 +114,5 @@ python main.py probe-service --video-id 159716 \
 - 探测会访问 `view.php` 页面，从 `playerdata`/`M.cfg` 获取 `sesskey` 与 `fsresourceid`，填入模板占位符后发送一次请求。
 - 控制台会先打印 `service.php` 的原始响应文本，再打印解析出的 `status/progress/totaltime/completion` 等关键字段。
 ### 特别鸣谢Trae编辑器对本项目的大力支持
+//TODO 相关提示词记录
+
