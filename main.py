@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--cookie-value",
         dest="cookie_value",
-        help="仅MoodleSession的值，例如 'fm1ci3bun53a5061qf6606kc9t'",
+        help="仅MoodleSession的值，例如 'wd5061qf6606kc9t'",
     )
     # list-videos
     p.add_argument("--course-id", type=int, help="课程ID，例如 2545")
