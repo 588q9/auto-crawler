@@ -23,19 +23,19 @@ pip install -r requirements.txt
 2. 运行列课命令（从“课程概览”区域提取，推荐以环境变量或参数传入 Cookie 值）：
 
 ```bash
-python main.py list-courses --cookie-value fm1ci3bun53a5061qf6606kc9t
+python main.py list-courses --cookie-value wqeqwn53a5061qf6606kc9t
 ```
 
 或使用环境变量：
 
 ```bash
-set MOODLE_SESSION=fm1ci3bun53a5061qf6606kc9t
+set MOODLE_SESSION=fweqwun53a5061qf6606kc9t
 python -m autocrawler.main list-courses
 ```
 
 > 提示：`--cookie` 参数也支持传入完整的 `Cookie` 头内容，例如：
 >
-> `--cookie "MoodleSession=fm1ci3bun53a5061qf6606kc9t"`
+> `--cookie "MoodleSession=3243s5061qf6606kc9t"`
 
 ## 目录结构
 
@@ -63,7 +63,7 @@ README.md
 ### 列出课程中的视频资源
 
 ```bash
-python main.py list-videos --course-id 2545 --cookie-value fm1ci3bun53a5061qf6606kc9t --only-incomplete
+python main.py list-videos --course-id 2545 --cookie-value ferr12n53a5061qf6606kc9t --only-incomplete
 ```
 
 ### 观看（刷）指定视频资源
