@@ -20,14 +20,14 @@ from src.features.course.watch import WatchVideoJob, ProbeServiceJob, WatchCours
 @click.pass_context
 def cli(ctx, config: str, log_level: str):
     ctx.ensure_object(dict)
-    
+
     config_path = Path(config)
     if not config_path.exists():
         logger.warning(f"配置文件不存在: {config}，使用默认配置")
-    
+
     cfg = load_config(config if config_path.exists() else None)
     ctx.obj["config"] = cfg
-    
+
     setup_logger(log_level or cfg.app.log_level)
     logger.info(f"配置文件: {config}")
 
@@ -44,19 +44,19 @@ def checkin():
 @click.pass_context
 def run(ctx, once: bool, cookie: Optional[str], api_user: Optional[str]):
     cfg = ctx.obj["config"]
-    
+
     if not cfg.checkin.enabled:
         logger.error("签到功能未启用，请在配置文件中设置 checkin.enabled = true")
         sys.exit(1)
-    
+
     cookie_header = cookie or cfg.auth.cookie_header
     api_user_header = api_user or (getattr(cfg.auth, "new_api_user", None))
     if not cookie_header or not api_user_header:
         logger.error("缺少请求头：请通过 --cookie 与 --api-user 或配置文件提供")
         sys.exit(1)
-    
+
     scheduler = CheckinScheduler(cfg.checkin, cfg.browser, cookie_header or "", api_user_header or "")
-    
+
     if once:
         logger.info("执行单次签到")
         scheduler.run_once()
@@ -74,11 +74,11 @@ def course():
 @click.pass_context
 def list_courses(ctx):
     cfg = ctx.obj["config"]
-    
+
     if not cfg.auth.cookie_header:
         logger.error("缺少Cookie，请在配置文件中设置 auth.cookie_header")
         sys.exit(1)
-    
+
     client = MoodleClient(cfg.app.base_url, cfg.auth.cookie_header)
     job = ListCoursesJob(client)
     job.run()
@@ -90,11 +90,11 @@ def list_courses(ctx):
 @click.pass_context
 def list_videos(ctx, course_id: int, only_incomplete: bool):
     cfg = ctx.obj["config"]
-    
+
     if not cfg.auth.cookie_header:
         logger.error("缺少Cookie，请在配置文件中设置 auth.cookie_header")
         sys.exit(1)
-    
+
     client = MoodleClient(cfg.app.base_url, cfg.auth.cookie_header)
     job = ListCourseVideosJob(client, course_id, only_incomplete)
     job.run()
@@ -107,19 +107,19 @@ def list_videos(ctx, course_id: int, only_incomplete: bool):
 @click.option("--payload-file", type=str, default=None, help="从文件读取JSON模板")
 @click.option("--target-seconds", type=int, default=None, help="视频总时长（秒）")
 @click.pass_context
-def watch_video(ctx, video_id: int, duration: Optional[int], interval: Optional[int], 
+def watch_video(ctx, video_id: int, duration: Optional[int], interval: Optional[int],
                 payload_file: Optional[str], target_seconds: Optional[int]):
     cfg = ctx.obj["config"]
-    
+
     if not cfg.auth.cookie_header:
         logger.error("缺少Cookie，请在配置文件中设置 auth.cookie_header")
         sys.exit(1)
-    
+
     client = MoodleClient(cfg.app.base_url, cfg.auth.cookie_header)
-    
+
     duration = duration or cfg.course.duration_seconds
     interval = interval or cfg.course.interval_seconds
-    
+
     payload_template = None
     if payload_file:
         try:
@@ -135,7 +135,7 @@ def watch_video(ctx, video_id: int, duration: Optional[int], interval: Optional[
         except Exception as e:
             logger.error(f"读取模板文件失败: {e}")
             sys.exit(1)
-    
+
     job = WatchVideoJob(
         client,
         video_id=video_id,
@@ -154,13 +154,13 @@ def watch_video(ctx, video_id: int, duration: Optional[int], interval: Optional[
 @click.pass_context
 def probe_service(ctx, video_id: int, payload_file: Optional[str], target_seconds: Optional[int]):
     cfg = ctx.obj["config"]
-    
+
     if not cfg.auth.cookie_header:
         logger.error("缺少Cookie，请在配置文件中设置 auth.cookie_header")
         sys.exit(1)
-    
+
     client = MoodleClient(cfg.app.base_url, cfg.auth.cookie_header)
-    
+
     payload_template = None
     if payload_file:
         try:
@@ -176,7 +176,7 @@ def probe_service(ctx, video_id: int, payload_file: Optional[str], target_second
         except Exception as e:
             logger.error(f"读取模板文件失败: {e}")
             sys.exit(1)
-    
+
     job = ProbeServiceJob(
         client,
         video_id=video_id,
@@ -199,17 +199,17 @@ def watch_course_incomplete(ctx, course_id: int, duration: Optional[int], interv
                            payload_file: Optional[str], target_seconds: Optional[int],
                            limit: Optional[int], gap: Optional[int]):
     cfg = ctx.obj["config"]
-    
+
     if not cfg.auth.cookie_header:
         logger.error("缺少Cookie，请在配置文件中设置 auth.cookie_header")
         sys.exit(1)
-    
+
     client = MoodleClient(cfg.app.base_url, cfg.auth.cookie_header)
-    
+
     duration = duration or cfg.course.duration_seconds
     interval = interval or cfg.course.interval_seconds
     gap = gap or cfg.course.gap_seconds
-    
+
     payload_template = None
     if payload_file:
         try:
@@ -225,7 +225,7 @@ def watch_course_incomplete(ctx, course_id: int, duration: Optional[int], interv
         except Exception as e:
             logger.error(f"读取模板文件失败: {e}")
             sys.exit(1)
-    
+
     job = WatchCourseIncompleteJob(
         client,
         course_id=course_id,
@@ -248,25 +248,25 @@ def watch_course_incomplete(ctx, course_id: int, duration: Optional[int], interv
 @click.pass_context
 def run_all(ctx, checkin: bool, course: bool, course_id: Optional[int], cookie: Optional[str], api_user: Optional[str]):
     cfg = ctx.obj["config"]
-    
+
     if not checkin and not course:
         logger.error("请指定要运行的功能：--checkin 或 --course")
         sys.exit(1)
-    
+
     if checkin and cfg.checkin.enabled:
         logger.info("运行签到功能")
         from src.features.checkin.api_worker import ApiCheckinWorker
         worker = ApiCheckinWorker(cfg.checkin, (cookie or cfg.auth.cookie_header), (api_user or getattr(cfg.auth, "new_api_user", None)))
         worker.run()
-    
+
     if course and cfg.course.enabled:
         if not course_id:
             logger.error("请指定课程ID：--course-id")
             sys.exit(1)
-        
+
         logger.info(f"运行刷课功能，课程ID: {course_id}")
         client = MoodleClient(cfg.app.base_url, cfg.auth.cookie_header)
-        
+
         payload_template = None
         if cfg.course.payload_template:
             try:
@@ -274,7 +274,7 @@ def run_all(ctx, checkin: bool, course: bool, course_id: Optional[int], cookie: 
                     payload_template = f.read()
             except Exception as e:
                 logger.error(f"读取模板文件失败: {e}")
-        
+
         job = WatchCourseIncompleteJob(
             client,
             course_id=course_id,
