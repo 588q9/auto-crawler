@@ -20,7 +20,7 @@ class AuthConfig:
 class CheckinConfig:
     enabled: bool = True
     time_range: str = "08:00-10:00"
-    url: str = "https://duckcoding.com/api/user/checkin"
+    url: str = "https://www.duckcoding.ai/api/user/checkin"
     retry_times: int = 3
     retry_interval: int = 60
     startup_window_seconds: int = 50

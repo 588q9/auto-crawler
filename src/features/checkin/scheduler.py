@@ -14,6 +14,14 @@ class CheckinScheduler:
         self.browser_config = browser_config
         self.worker = ApiCheckinWorker(config, cookie_header or None, api_user or None)
     
+    def _random_time_on(self, base: datetime) -> datetime:
+        start_dt, end_dt = parse_time_range(self.config.time_range)
+        start_dt = start_dt.replace(year=base.year, month=base.month, day=base.day)
+        end_dt = end_dt.replace(year=base.year, month=base.month, day=base.day)
+        span = int((end_dt - start_dt).total_seconds())
+        offset = random.randint(0, max(0, span))
+        return start_dt + timedelta(seconds=offset)
+    
     def _attempt_checkin_with_retry(self) -> bool:
         success = False
         for attempt in range(self.config.retry_times):
@@ -45,34 +53,16 @@ class CheckinScheduler:
         time.sleep(initial_delay)
         self._attempt_checkin_with_retry()
         
+        next_dt = self._random_time_on(datetime.now() + timedelta(days=1))
+        logger.info(f"已安排次日签到时间：{next_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+        time.sleep(max(0, int((next_dt - datetime.now()).total_seconds())))
+        
         while True:
             try:
-                start_dt, end_dt = parse_time_range(self.config.time_range)
-                now = datetime.now()
-                if now < start_dt:
-                    wait_seconds = (start_dt - now).total_seconds()
-                    logger.info(f"等待至每日窗口开始 {start_dt.strftime('%H:%M:%S')}，约 {int(wait_seconds)} 秒")
-                    time.sleep(wait_seconds)
-                    now = datetime.now()
-                if now > end_dt:
-                    next_start = (now + timedelta(days=1)).replace(hour=start_dt.hour, minute=start_dt.minute, second=start_dt.second, microsecond=0)
-                    wait_seconds = (next_start - now).total_seconds()
-                    logger.info(f"当前已过每日窗口结束，等待至次日 {next_start.strftime('%H:%M:%S')}，约 {int(wait_seconds)} 秒")
-                    time.sleep(wait_seconds)
-                    now = datetime.now()
-
-                remaining = max(0, int((end_dt - now).total_seconds()))
-                delay = min(random.randint(0, int(self.config.startup_window_seconds or 50)), remaining)
-                logger.info(f"本次将在当前时间后 {delay} 秒执行签到（不在凌晨执行）")
-                time.sleep(delay)
-
                 self._attempt_checkin_with_retry()
-                
-                tomorrow_start = (datetime.now() + timedelta(days=1)).replace(hour=start_dt.hour, minute=start_dt.minute, second=start_dt.second, microsecond=0)
-                wait_seconds = (tomorrow_start - datetime.now()).total_seconds()
-                logger.info(f"等待至次日窗口开始 {tomorrow_start.strftime('%H:%M:%S')}，约 {int(wait_seconds)} 秒")
-                time.sleep(wait_seconds)
-                
+                next_dt = self._random_time_on(datetime.now() + timedelta(days=1))
+                logger.info(f"已安排次日签到时间：{next_dt.strftime('%Y-%m-%d %H:%M:%S')}")
+                time.sleep(max(0, int((next_dt - datetime.now()).total_seconds())))
             except KeyboardInterrupt:
                 logger.info("收到中断信号，停止签到调度器")
                 break
